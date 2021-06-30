@@ -8,9 +8,9 @@ import json
 
 def createParser ():
     parser = argparse.ArgumentParser()
-    parser.add_argument ('-n', '--inputfile', default='example.docx')
-    parser.add_argument ('-n', '--tablejson')
-    parser.add_argument ('-n', '--otputfile')
+    parser.add_argument ('--inputfile', default='example.docx')
+    parser.add_argument ('--tablejson')
+    parser.add_argument ('--otputfile')
     return parser
 
 if __name__ == '__main__':
@@ -41,6 +41,8 @@ if __name__ == '__main__':
         row_cells[1].text = id
         row_cells[2].text = desc
 
-
+    for sec in doc.sections:
+        footer = sec.footer
+        par = footer.add_paragraph("Текст нижнего колонтитула.")
 
     doc.save('demo.docx')
