@@ -9,6 +9,7 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT, WD_TAB_ALIGNMENT, WD_LINE_SPA
 from docx.oxml import OxmlElement, ns
 from docx.shared import Cm, Pt
 
+# Инициализация входных параметров.
 def createParser ():
     parser = argparse.ArgumentParser()
     parser.add_argument ('inputfile', type=str)
@@ -23,6 +24,7 @@ def create_element(name):
 def create_attribute(element, name, value):
     element.set(ns.qn(name), value)
 
+# Тонкая работа с XML для вывода особых штук - номера страницы.
 def append_special_thing(paragraph, thing):
     #--- Добавляем номер страницы
     # запускаем динамическое обновление параграфа
@@ -42,29 +44,26 @@ def append_special_thing(paragraph, thing):
     page_num_run._r.append(instrText)
     page_num_run._r.append(fldChar2)
 
-
+# Вывести номер страницы в нужном виде.
 def add_page_number(paragraph):
-    
     # выравниваем параграф по правому краю
     paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
-
-    #--- Добавляем текст "Страница"
+    # Добавляем текст "Страница"
     paragraph.add_run("Страница ")
-
-    #--- Добавляем номер страницы
+    # Добавляем номер страницы
     append_special_thing(paragraph, "PAGE")
-
-    #--- Добавляем текст "из"
+    # Добавляем текст "из"
     paragraph.add_run(" из ")
-
-    #--- Добавляем количество страниц
+    # Добавляем количество страниц
     append_special_thing(paragraph, "NUMPAGES")
-    
+
+# Добавить строку с договором.    
 def add_contract(paragraph):
     paragraph.add_run("Договор № ______")
     run = paragraph.add_run()
     run.add_tab()
 
+# Установить абзацу правильные стиль и формат. Много хардкода.
 def make_beauty(paragraph):
     paragraph.style.font.size = Pt(7)
     paragraph.style.font.name = 'Verdana'
@@ -75,22 +74,30 @@ def make_beauty(paragraph):
 
 # Основное действие.
 if __name__ == '__main__':
+    # Парсер параметров.
     parser = createParser()
     arguments = parser.parse_args(sys.argv[1:])
 
+    # Чтение документа-исходника.
     doc = docx.Document(arguments.inputfile)
 
-    # with  as read_file:
+    # Чтение входящих параметров.
     data = json.load(open(arguments.data, encoding='utf-8'))
     
     section = doc.sections[0]
     footer = section.footer
 
+    # Чистим все абзацы футера, на всякий случай.
+    footer.paragraphs.clear()
+
+    # Получаем ширину страницы в универсальных единицах. Это потом пригодится.
     page_width = section.page_width
 
+    # Не смотря на то, что параграфы очистили, первый элемент все равно есть. Не знаю почему.
     paragraph = footer.paragraphs[0]
+
+    # Добавим немного стиля.
     make_beauty(paragraph)
-    
 
     # Добавляем таб-стоп, чтобы разнести элементы по разным сторонам строки.
     tab_stops = paragraph.paragraph_format.tab_stops
@@ -103,6 +110,8 @@ if __name__ == '__main__':
 
     # Добавим абзац с визами.
     par = footer.add_paragraph(data.get("text"))
+    
+    # Добавим немного стиля.
     make_beauty(par)
 
     # Сохраним документ.
