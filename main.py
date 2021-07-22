@@ -72,6 +72,11 @@ def make_beauty(paragraph):
     paragraph.paragraph_format.line_spacing_rule = WD_LINE_SPACING.EXACTLY
     paragraph.paragraph_format.line_spacing = Pt(10.2)
 
+def delete_paragraph(paragraph):
+    p = paragraph._element
+    p.getparent().remove(p)
+    p._p = p._element = None
+
 # Основное действие.
 if __name__ == '__main__':
     # Парсер параметров.
@@ -88,13 +93,15 @@ if __name__ == '__main__':
     footer = section.footer
 
     # Чистим все абзацы футера, на всякий случай.
-    footer.paragraphs.clear()
+    # footer.paragraphs._r.RemoveAll()
+    for i in footer.paragraphs:
+       delete_paragraph(i) 
 
     # Получаем ширину страницы в универсальных единицах. Это потом пригодится.
     page_width = section.page_width
 
     # Не смотря на то, что параграфы очистили, первый элемент все равно есть. Не знаю почему.
-    paragraph = footer.paragraphs[0]
+    paragraph = footer.add_paragraph()
 
     # Добавим немного стиля.
     make_beauty(paragraph)
